@@ -9,6 +9,22 @@ class RelativePhase:
         self.samp_f = samp_f
 
     def crp(self, ts1, ts2, ts1_vel=None, ts2_vel=None):
+        """
+
+        Args:
+            ts1: displacement of the first time series
+            ts1_vel:  velocity of the first time series
+            ts2: displacement of the second time series
+            ts2_vel: velocity of the second time series
+
+        Attributes:
+            marp: Mean Absolute Relative Phase is calculated by averaging the 100 data points of the mean
+        ensemble curve
+            dph: Deviation Phase is calculated by averaging the standard deviations of the ensemble curve data points
+
+        Returns:
+            rel_phase: array n * 100, where n=the number of detected cycles
+        """
 
         if ts1_vel is None and ts2_vel is None:
             ts1, ts1_vel = get_vel(ts1)
@@ -67,13 +83,10 @@ def segment_crp(ts1, ts1_vel, ts2, ts2_vel):
     Calculates the Continuous Relative Phase in degrees
 
     Args:
-        ts1: displacement of the first time series
-        ts1_vel:  velocity of the first time series
-        ts2: displacement of the second time series
-        ts2_vel: velocity of the second time series
+        * same as crp def
 
     Returns:
-    relative_phase: continuour relative phase of size (len(ts1/ts2...), 1)
+    relative_phase: continuous relative phase of size (len(ts1/ts2...), 1)
     """
 
     relative_phase = (np.arctan2(ts1_vel, ts1) - np.arctan2(ts2_vel, ts2)) * 180 / np.pi

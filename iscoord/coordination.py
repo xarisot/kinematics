@@ -1,28 +1,36 @@
 import numpy as np
 import scipy.signal
+import matplotlib.pyplot as plt
 
 
 class RelativePhase:
 
-    def __init__(self, ts1, ts2, samp_f):
-        self.ts1 = ts1
-        self.ts2 = ts2
+    def __init__(self, samp_f=128):
         self.samp_f = samp_f
 
-    def crp(self):
-        # get the displacement and velocity normalised as per Lamp et al. 2014
-        ts1, ts1_vel = get_vel(self.ts1)
-        ts2, ts2_vel = get_vel(self.ts2)
+    def crp(self, ts1, ts2, ts1_vel=None, ts2_vel=None):
+
+        if ts1_vel is None and ts2_vel is None:
+            ts1, ts1_vel = get_vel(ts1)
+            ts2, ts2_vel = get_vel(ts2)
+
+        else:
+            ts1 = normalise(ts1)
+            ts1_vel = normalise(ts1_vel)
+            ts2 = normalise(ts2)
+            ts2_vel = normalise(ts2_vel)
 
         # cut signal into cycles using zero_crossing
-        zero_crossings = get_cycles(ts1)
+        zero_crossings = get_cycles(ts2)
         rel_phase = make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx=zero_crossings)
 
         self.marp = round(np.abs(rel_phase).mean(), 2)
         self.dph = round(np.std(rel_phase), 2)
 
+        return rel_phase
 
-def get_vel(x, sampf=100):
+
+def get_vel(x):
     """Calculates the phase angle given x and sample frequency"""
 
     t = np.arange(0.1, len(x) + .1, 1)
@@ -67,7 +75,9 @@ def segment_crp(ts1, ts1_vel, ts2, ts2_vel):
     Returns:
     relative_phase: continuour relative phase of size (len(ts1/ts2...), 1)
     """
+
     relative_phase = (np.arctan2(ts1_vel, ts1) - np.arctan2(ts2_vel, ts2)) * 180 / np.pi
+
     relative_phase = correct_quartile(relative_phase)
 
     return relative_phase
@@ -107,21 +117,21 @@ def make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx):
     and proceed to marp and dph calculation
     """
 
-    relph = np.zeros((100, len(zx)))
-    step = 0
+    relph = np.zeros((100, len(zx)-1))
 
-    for i in zx:
-        ts1_c = scipy.signal.resample(ts1[i:i+1], 100)
-        ts1v_c = scipy.signal.resample(ts1_vel[i:i+1], 100)
-        ts2_c = scipy.signal.resample(ts2[i:i+1], 100)
-        ts2v_c = scipy.signal.resample(ts2_vel[i:i+1], 100)
+    for i in range(0, len(zx)-1):
 
+        ts1_c = scipy.signal.resample(ts1[zx[i]:zx[i+1]], 100)
+        ts1v_c = scipy.signal.resample(ts1_vel[zx[i]:zx[i+1]], 100)
+        ts2_c = scipy.signal.resample(ts2[zx[i]:zx[i+1]], 100)
+        ts2v_c = scipy.signal.resample(ts2_vel[zx[i]:zx[i+1]], 100)
 
         # calculate crp for each segment
-        relph[:, step] = segment_crp(ts1_c, ts1v_c, ts2_c, ts2v_c)
-        step += 1
+        relph[:, i] = segment_crp(ts1_c, ts1v_c, ts2_c, ts2v_c)
 
+    relph = relph[:100,:]
     return relph
+
 
 
 

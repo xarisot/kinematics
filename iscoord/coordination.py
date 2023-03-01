@@ -27,8 +27,8 @@ class RelativePhase:
         """
 
         if ts1_vel is None and ts2_vel is None:
-            ts1, ts1_vel = get_vel(ts1)
-            ts2, ts2_vel = get_vel(ts2)
+            ts1, ts1_vel = get_vel(ts1, self.samp_f)
+            ts2, ts2_vel = get_vel(ts2, self.samp_f)
 
         else:
             ts1 = normalise(ts1)
@@ -46,13 +46,14 @@ class RelativePhase:
         return rel_phase
 
 
-def get_vel(x):
-    """Calculates the phase angle given x and sample frequency"""
+def get_vel(x, samp_f):
+    """Calculates the velocity given the displacement and the sample frequency"""
 
-    t = np.arange(0.1, len(x) + .1, 1)
+    tau = 1/samp_f
+    time = np.arange(tau, len(x) + tau, 1)
 
     x_diff = np.diff(x)
-    t_diff = np.diff(t)
+    t_diff = np.diff(time)
     x_vel = x_diff/t_diff
 
     x_norm = normalise(x)

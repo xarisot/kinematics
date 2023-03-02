@@ -40,8 +40,8 @@ class RelativePhase:
         zero_crossings = get_cycles(ts2)
         rel_phase = make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx=zero_crossings)
 
-        self.marp = round(np.abs(rel_phase).mean(), 2)
-        self.dph = round(np.std(rel_phase), 2)
+        self.marp = round(np.abs(rel_phase.mean(axis=1)).mean(), 2)
+        self.dph = round(np.abs(rel_phase.std(axis=1)).mean(), 2)
 
         return rel_phase
 

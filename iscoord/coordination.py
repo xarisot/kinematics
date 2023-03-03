@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal
+from kinematics.iscoord.kinematic_plots import plot_crp, plot_raw, phase_space
 import matplotlib.pyplot as plt
 
 
@@ -8,7 +9,7 @@ class RelativePhase:
     def __init__(self, samp_f=128):
         self.samp_f = samp_f
 
-    def crp(self, ts1, ts2, ts1_vel=None, ts2_vel=None):
+    def crp(self, ts1, ts2, ts1_vel=None, ts2_vel=None, plots=False):
         """
 
         Args:
@@ -16,6 +17,7 @@ class RelativePhase:
             ts1_vel:  velocity of the first time series
             ts2: displacement of the second time series
             ts2_vel: velocity of the second time series
+            plots: Boolean (default=False). Whether to show plots
 
         Attributes:
             marp: Mean Absolute Relative Phase is calculated by averaging the 100 data points of the mean
@@ -25,31 +27,35 @@ class RelativePhase:
         Returns:
             rel_phase: array n * 100, where n=the number of detected cycles
         """
-
         if ts1_vel is None and ts2_vel is None:
-            ts1, ts1_vel = get_vel(ts1, self.samp_f)
-            ts2, ts2_vel = get_vel(ts2, self.samp_f)
-
+            ts1_norm, ts1_vel_norm = get_vel(ts1, self.samp_f)
+            ts2_norm, ts2_vel_norm = get_vel(ts2, self.samp_f)
+            ts1_norm, ts2_norm = ts1_norm[:-1], ts2_norm[:-1]
         else:
-            ts1 = normalise(ts1)
-            ts1_vel = normalise(ts1_vel)
-            ts2 = normalise(ts2)
-            ts2_vel = normalise(ts2_vel)
+            ts1_norm = normalise(ts1)
+            ts1_vel_norm = normalise(ts1_vel[:-1])
+            ts2_norm = normalise(ts2)
+            ts2_vel_norm = normalise(ts2_vel[:-1])
 
         # cut signal into cycles using zero_crossing
-        zero_crossings = get_cycles(ts2)
-        rel_phase = make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx=zero_crossings)
+        zero_crossings = get_cycles(ts2_norm)
+        rel_phase = make_ensemble_curves(ts1_norm, ts1_vel_norm, ts2_norm, ts2_vel_norm, zx=zero_crossings)
 
         self.marp = round(np.abs(rel_phase.mean(axis=1)).mean(), 2)
         self.dph = round(np.abs(rel_phase.std(axis=1)).mean(), 2)
 
+        if plots:
+            plot_raw(ts1, ts2, 'z')
+            phase_space(ts1_norm, ts1_vel_norm, ts2_norm, ts2_vel_norm)
+            plot_crp(rel_phase)
+
         return rel_phase
 
 
-def get_vel(x, samp_f):
+def get_vel(x, sampf):
     """Calculates the velocity given the displacement and the sample frequency"""
 
-    tau = 1/samp_f
+    tau = 1/sampf
     time = np.arange(tau, len(x) + tau, 1)
 
     x_diff = np.diff(x)
@@ -58,8 +64,7 @@ def get_vel(x, samp_f):
 
     x_norm = normalise(x)
     x_vel_norm = normalise(x_vel)
-
-    return x_norm[1:], x_vel_norm
+    return x_norm, x_vel_norm
 
 
 def normalise(x):
@@ -147,7 +152,7 @@ def make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx):
         # calculate crp for each segment
         relph[:, i] = segment_crp(ts1_c, ts1v_c, ts2_c, ts2v_c)
 
-    relph = relph[:100,:]
+    relph = relph[:100, :]
     return relph
 
 

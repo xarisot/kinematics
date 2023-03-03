@@ -1,6 +1,6 @@
 from kinematics.iscoord.coordination import RelativePhase
 import numpy as np
-
+import matplotlib.pyplot as plt
 # create signals
 t = np.arange(0, 100, 0.01)
 v0 = np.sin(t)  # first signal
@@ -13,7 +13,8 @@ c = RelativePhase()
 relph = c.crp(v0, v1)
 print(f"MARP = {c.marp}\nDPh = {c.dph}")
 
-print(relph.shape)
+plt.plot(relph)
+plt.show()
 # import matplotlib.pyplot as plt
 # # plt.plot(relph)
 # # plt.ylim([-1,1])

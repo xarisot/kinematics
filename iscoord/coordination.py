@@ -107,10 +107,14 @@ def correct_quartile(x):
     Returns:
         x - corrected
     """
-
+    #
     for i in range(0, len(x)):
-        if x[i] > 180:
-            x[i] = x[i] - 360
+        if x[i] < x[i-1]-300:
+            x[i] += 360
+
+        if x[i] > x[i-1]+300:
+            x[i] -= 360
+
     return x
 
 

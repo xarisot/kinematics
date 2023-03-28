@@ -11,7 +11,7 @@ def plot_raw(r, l, coord):
     plt.title('raw angular displacement')
     plt.xlabel('data points')
     plt.ylabel('angular displacement (degrees)')
-    plt.ylim([-60, 60])
+    # plt.ylim([-60, 60])
     plt.show()
 
 

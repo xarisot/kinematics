@@ -1,10 +1,25 @@
-from scipy import signal
-from scipy import integrate
+from scipy import signal, integrate
 import pandas as pd
 import numpy as np
+from kinematics.iscoord.checks import check_pd_df
+
+def rm_offset(data):
+    """Removes the first value"""
+
+    check_pd_df(data)
+    return data - data.iloc[0]
 
 
-def filt(series, samp_f, convert_g, filt_type='bandpass',  cutoff=[.1, 5]):
+def downsample(data1, data2):
+    """Downsamples data1 to match the length of data2"""
+
+    map(check_pd_df, (data1, data2))
+
+    return pd.DataFrame(data=signal.resample(data1, len(data2)),
+                        columns=data1.columns)
+
+
+def filt(series, samp_f, convert_g, filt_type='bandpass',  order=4, cutoff=[.1, 5]):
     """
     Time series filtering
 
@@ -14,6 +29,7 @@ def filt(series, samp_f, convert_g, filt_type='bandpass',  cutoff=[.1, 5]):
         filt_type: the filter type ("bandpass", "low" or "high")
         cutoff: the critical frequency(-ies).
         convert_g: Converts g to m/s^2 (default=True)
+        order: the order of the filter (default=4)
 
     Returns:
         The filtered signal
@@ -24,7 +40,7 @@ def filt(series, samp_f, convert_g, filt_type='bandpass',  cutoff=[.1, 5]):
     if convert_g:
         series = series * 9.80665  # convert g to m/s^2
 
-    butter = signal.butter(4, cutoff, filt_type, fs=samp_f, output='sos')
+    butter = signal.butter(order, cutoff, filt_type, fs=samp_f, output='sos')
     filtered = signal.sosfilt(butter, series)
 
     return filtered

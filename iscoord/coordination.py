@@ -1,8 +1,5 @@
 import numpy as np
 import scipy.signal
-# from kinematics.iscoord.kinematic_plots import plot_crp, plot_raw, phase_space
-# from checktypes import check_pd_df
-
 from kinematic_plots import plot_crp, plot_raw, phase_space
 from checktypes import check_pd_df
 
@@ -115,6 +112,7 @@ def correct_quartile(x):
     Args:
         x: the crp time series
 
+    Returns:
         x - corrected
     """
     x_corrected = x.copy()

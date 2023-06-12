@@ -1,21 +1,41 @@
 from scipy import signal, integrate
 import pandas as pd
 import numpy as np
-from kinematics.iscoord.checks import check_pd_df
-
-def rm_offset(data):
-    """Removes the first value"""
-
-    check_pd_df(data)
-    return data - data.iloc[0]
+import checktypes as checks
 
 
-def downsample(data1, data2):
-    """Downsamples data1 to match the length of data2"""
+def center(data, method='first'):
+    """Removes the first value, by either removing the first  value or the mean (method = 'first' or 'mean')"""
 
-    map(check_pd_df, (data1, data2))
+    checks.check_pd_df(data)
 
-    return pd.DataFrame(data=signal.resample(data1, len(data2)),
+    if method == 'first':
+        return data - data.iloc[0]
+    elif method == 'mean':
+        return data - data.mean()
+    else:
+        raise ValueError(f"method can be either 'first' or 'mean'")
+
+
+def downsample(data1, data2=None, n_data_points=None):
+    """Downsamples data1 to match the length of data2. Either data2 or n_data_points needs to be input"""
+
+    if data2 is None:
+        if n_data_points is None:
+            raise ValueError("Both data2 and n_data_points are set to 'None'. At least one needs to be entered")
+        else: 
+            map(checks.check_pd_df, (data1, data2))
+            length = n_data_points
+            
+    if data2 is not None:
+        if n_data_points is not None:
+            raise ValueError("Either data2 or n_data_points needs to be None")
+        else:
+            checks.check_pd_df(data1)
+            length = len(data2)
+        
+
+    return pd.DataFrame(data=signal.resample(data1, length),
                         columns=data1.columns)
 
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def plot_raw(r, l, coord):
     if coord not in ['y', 'z']:
         raise ValueError("coord must be either 'y' or 'z'")
@@ -11,7 +12,7 @@ def plot_raw(r, l, coord):
     plt.title('raw angular displacement')
     plt.xlabel('data points')
     plt.ylabel('angular displacement (degrees)')
-    # plt.ylim([-60, 60])
+    plt.xlim([2000, 4000])
     plt.show()
 
 
@@ -30,6 +31,6 @@ def plot_crp(relph):
     plt.title('CRP')
     plt.xlabel('% of arm sway cycle')
     plt.ylabel('φ in degrees')
-    plt.ylim([0, 360])
+    plt.ylim([-1, 360])
     plt.show()
 

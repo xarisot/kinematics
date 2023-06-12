@@ -1,13 +1,16 @@
 import numpy as np
 import scipy.signal
-from kinematics.iscoord.kinematic_plots import plot_crp, plot_raw, phase_space
-import matplotlib.pyplot as plt
+# from kinematics.iscoord.kinematic_plots import plot_crp, plot_raw, phase_space
+# from checktypes import check_pd_df
 
+from kinematic_plots import plot_crp, plot_raw, phase_space
+from checktypes import check_pd_df
 
 class RelativePhase:
 
-    def __init__(self, samp_f=128):
+    def __init__(self, samp_f=128, cycles_based_on=None):
         self.samp_f = samp_f
+        self.cycles_based_on = cycles_based_on
 
     def crp(self, ts1, ts2, ts1_vel=None, ts2_vel=None, plots=False):
         """
@@ -32,17 +35,20 @@ class RelativePhase:
             ts2_norm, ts2_vel_norm = get_vel(ts2, self.samp_f)
             ts1_norm, ts2_norm = ts1_norm[:-1], ts2_norm[:-1]
         else:
-            ts1_norm = normalise(ts1)
-            ts1_vel_norm = normalise(ts1_vel[:-1])
-            ts2_norm = normalise(ts2)
-            ts2_vel_norm = normalise(ts2_vel[:-1])
+            ts1_norm = ts1
+            ts1_vel_norm = ts1_vel[:-1]
+            ts2_norm = ts2
+            ts2_vel_norm = ts2_vel[:-1]
 
         # cut signal into cycles using zero_crossing
-        zero_crossings = get_cycles(ts2_norm)
+        if self.cycles_based_on is not None:
+            zero_crossings = get_cycles(self.cycles_based_on)
+        else:
+            zero_crossings = get_cycles(ts1_norm)
         rel_phase = make_ensemble_curves(ts1_norm, ts1_vel_norm, ts2_norm, ts2_vel_norm, zx=zero_crossings)
 
-        self.marp = round(np.abs(rel_phase.mean(axis=1)).mean(), 2)
-        self.dph = round(np.abs(rel_phase.std(axis=1)).mean(), 2)
+        self.marp = round(np.abs(rel_phase).mean(axis=1).mean(), 2)
+        self.dph = round(np.abs(rel_phase).std(axis=1).mean(), 2)
 
         if plots:
             plot_raw(ts1, ts2, 'z')
@@ -62,9 +68,9 @@ def get_vel(x, sampf):
     t_diff = np.diff(time)
     x_vel = x_diff/t_diff
 
-    x_norm = normalise(x)
-    x_vel_norm = normalise(x_vel)
-    return x_norm, x_vel_norm
+    # x_norm = normalise(x)
+    # x_vel_norm = normalise(x_vel)
+    return x, x_vel
 
 
 def normalise(x):
@@ -74,7 +80,7 @@ def normalise(x):
 
 
 def get_cycles(ts):
-
+    print(ts)
     if ts[0] == 0:
         raise ValueError("The first value of the input signal must be non-zero, "
                          "\n\t\t\totherwise the cycles will not be cut correctly")
@@ -96,7 +102,7 @@ def segment_crp(ts1, ts1_vel, ts2, ts2_vel):
     """
 
     relative_phase = (np.arctan2(ts1_vel, ts1) - np.arctan2(ts2_vel, ts2)) * 180 / np.pi
-
+    
     relative_phase = correct_quartile(relative_phase)
 
     return relative_phase
@@ -109,18 +115,19 @@ def correct_quartile(x):
     Args:
         x: the crp time series
 
-    Returns:
         x - corrected
     """
-    #
-    for i in range(0, len(x)):
-        if x[i] < x[i-1]-300:
-            x[i] += 360
+    x_corrected = x.copy()
 
-        if x[i] > x[i-1]+300:
-            x[i] -= 360
+    for i in range(0, len(x_corrected)):
 
-    return x
+        if x_corrected[i] < x_corrected[i-1]-300:
+            x_corrected[i] += 360
+
+        if x_corrected[i] > x_corrected[i-1]+300:
+            x_corrected[i] -= 360
+
+    return x_corrected
 
 
 def make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx):
@@ -139,19 +146,23 @@ def make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx):
     * Note: the signals are resampled at 100 to generate segments of equal length (ensemble curves)
     and proceed to marp and dph calculation
     """
-
     relph = np.zeros((100, len(zx)-1))
-
     for i in range(0, len(zx)-1):
 
         ts1_c = scipy.signal.resample(ts1[zx[i]:zx[i+1]], 100)
         ts1v_c = scipy.signal.resample(ts1_vel[zx[i]:zx[i+1]], 100)
         ts2_c = scipy.signal.resample(ts2[zx[i]:zx[i+1]], 100)
         ts2v_c = scipy.signal.resample(ts2_vel[zx[i]:zx[i+1]], 100)
-
+        
+        ts1_c = normalise(ts1_c)
+        ts1v_c = normalise(ts1v_c)
+        ts2_c = normalise(ts2_c)
+        ts2v_c = normalise(ts2v_c)
+        # phase_space(ts1_c, ts1v_c, ts2_c, ts2v_c)
+        
         # calculate crp for each segment
         relph[:, i] = segment_crp(ts1_c, ts1v_c, ts2_c, ts2v_c)
-
+    # plt.show()
     relph = relph[:100, :]
     return relph
 

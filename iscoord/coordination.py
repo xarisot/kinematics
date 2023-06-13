@@ -83,7 +83,7 @@ def get_cycles(ts):
         raise ValueError("The first value of the input signal must be non-zero, "
                          "\n\t\t\totherwise the cycles will not be cut correctly")
 
-    zero_crossings = np.where(np.diff(np.sign(ts)))[0][1::1]  # every two zero crossings to get a full cycle
+    zero_crossings = np.where(np.diff(np.sign(ts)))[0][1::2]  # every two zero crossings to get a full cycle
 
     return zero_crossings
 

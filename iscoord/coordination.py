@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.signal
 from kinematic_plots import plot_crp, plot_raw, phase_space
-from checktypes import check_pd_df
+import matplotlib.pyplot as plt
+
 
 class RelativePhase:
 
@@ -77,12 +78,12 @@ def normalise(x):
 
 
 def get_cycles(ts):
-    print(ts)
+
     if ts[0] == 0:
         raise ValueError("The first value of the input signal must be non-zero, "
                          "\n\t\t\totherwise the cycles will not be cut correctly")
 
-    zero_crossings = np.where(np.diff(np.sign(ts)))[0][1::2]  # every two zero crossings to get a full cycle
+    zero_crossings = np.where(np.diff(np.sign(ts)))[0][1::1]  # every two zero crossings to get a full cycle
 
     return zero_crossings
 
@@ -156,11 +157,9 @@ def make_ensemble_curves(ts1, ts1_vel, ts2, ts2_vel, zx):
         ts1v_c = normalise(ts1v_c)
         ts2_c = normalise(ts2_c)
         ts2v_c = normalise(ts2v_c)
-        # phase_space(ts1_c, ts1v_c, ts2_c, ts2v_c)
         
         # calculate crp for each segment
         relph[:, i] = segment_crp(ts1_c, ts1v_c, ts2_c, ts2v_c)
-    # plt.show()
     relph = relph[:100, :]
     return relph
 

@@ -2,17 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_raw(r, l, coord):
+def plot_raw(l, r, coord):
     if coord not in ['y', 'z']:
         raise ValueError("coord must be either 'y' or 'z'")
 
-    plt.plot(r)
     plt.plot(l)
-    plt.legend(['right', 'left'])
+    plt.plot(r)
+    plt.legend(['left', 'right'])
     plt.title('raw angular displacement')
     plt.xlabel('data points')
     plt.ylabel('angular displacement (degrees)')
-    plt.xlim([2000, 4000])
+    # plt.xlim([2000, 4000])
     plt.show()
 
 
